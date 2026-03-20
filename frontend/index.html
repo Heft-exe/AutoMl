@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoML Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header>
+  <div>
+    <div class="logo-mark">AutoML Studio</div>
+    <div class="logo-sub">Automated Machine Learning</div>
+  </div>
+  <div class="header-chip">Powered by PyCaret</div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────── -->
+<main class="container">
+
+  <!-- STEP 1: Upload -->
+  <section class="card">
+    <div class="card-header">
+      <div class="step-num">1</div>
+      <div class="card-title">Upload Dataset</div>
+    </div>
+    <div class="card-body">
+      <div id="dropzone">
+        <span class="drop-icon">📂</span>
+        <div class="drop-text">Click or drag & drop your CSV file here</div>
+        <div class="drop-hint">Supports .csv files only</div>
+      </div>
+      <input type="file" id="fileInput" accept=".csv" hidden />
+      <div id="uploadStatus" class="hidden" style="margin-top:.8rem;"></div>
+    </div>
+  </section>
+
+  <!-- STEP 2: Data Preview -->
+  <section id="dataSection" class="card hidden">
+    <div class="card-header">
+      <div class="step-num">2</div>
+      <div class="card-title">Dataset Preview</div>
+    </div>
+    <div class="card-body">
+      <div class="stats-bar">
+        <div class="stat-chip"><span id="statRows">–</span> rows</div>
+        <div class="stat-chip"><span id="statCols">–</span> columns</div>
+        <div class="stat-chip"><span id="statMissing">–</span> missing values</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: Train -->
+  <section id="trainSection" class="card hidden">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      <div class="card-title">Train AutoML Model</div>
+    </div>
+    <div class="card-body">
+      <p class="muted" style="margin-bottom:1rem;">
+        Select your target column — PyCaret will automatically train and compare
+        multiple models, then select the best one.
+      </p>
+      <div class="select-wrap">
+        <select id="targetSelect" class="form-select"></select>
+        <button class="btn btn-primary" id="trainBtn" onclick="triggerTraining()">
+          ▶ Train Model
+        </button>
+      </div>
+      <div id="trainStatus" class="hidden" style="margin-top:1rem;"></div>
+    </div>
+  </section>
+
+  <!-- STEP 4: Results -->
+  <section id="resultsSection" class="card hidden">
+    <div class="model-hero">
+      <div>
+        <div class="muted" style="font-size:.7rem;letter-spacing:.1em;margin-bottom:.2rem;">BEST MODEL</div>
+        <div class="model-name" id="bestModelName">–</div>
+      </div>
+      <div class="badge" id="taskTypeBadge">–</div>
+      <div class="badge" id="targetBadge">–</div>
+      <button class="btn btn-outline" style="margin-left:auto" onclick="downloadModel()">
+        ⬇ Download Model
+      </button>
+    </div>
+
+    <div class="card-body">
+      <!-- Metrics -->
+      <div class="section-title">Evaluation Metrics</div>
+      <div class="metrics-grid" id="metricsGrid"></div>
+
+      <hr class="divider" />
+
+      <!-- Feature Importance -->
+      <div class="section-title">Feature Importance</div>
+      <div id="featureChart" style="margin-bottom:1.8rem;"></div>
+
+      <hr class="divider" />
+
+      <!-- Model Comparison -->
+      <div class="section-title">Model Comparison (Top 10)</div>
+      <div class="table-wrap">
+        <table>
+          <thead id="comparisonHead"></thead>
+          <tbody id="comparisonBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5: Predict -->
+  <section id="predictSection" class="card hidden">
+    <div class="card-header">
+      <div class="step-num">5</div>
+      <div class="card-title">Make a Prediction</div>
+    </div>
+    <div class="card-body">
+      <p class="muted" style="margin-bottom:1rem;">
+        Enter values for each feature column and click Predict.
+      </p>
+      <div class="predict-grid" id="predictForm"></div>
+      <div class="row">
+        <button class="btn btn-green" id="predictBtn" onclick="sendPredictionRequest()">
+          🔮 Predict
+        </button>
+      </div>
+      <div id="predictionResult" class="hidden"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
