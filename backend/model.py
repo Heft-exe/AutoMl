@@ -20,7 +20,6 @@ from pycaret.regression import (
 MODEL_PATH = "backend/trained_model"
 TASK_FILE  = "task_type.txt"
 
-
 # 1. Load data
 def load_data(filepath: str) -> pd.DataFrame:
     """Read a CSV file and return a DataFrame."""
@@ -51,6 +50,26 @@ def detect_task_type(df: pd.DataFrame, target: str) -> str:
 # 4. Train AutoML model
 def train_automl_model(df: pd.DataFrame, target: str) -> dict:
     """Run PyCaret AutoML. Returns metrics, feature importance, and comparison table."""
+
+    # ✅ ADD THIS BLOCK AT THE TOP
+    df = df.copy()
+
+    # Remove useless columns
+    df = clean_columns(df, target)
+
+    # Convert numeric-like strings to numbers
+    for col in df.columns:
+        if df[col].dtype == "object":
+            try:
+                df[col] = pd.to_numeric(df[col])
+            except:
+                pass
+
+    # Handle missing values
+    df = df.fillna(method="ffill").fillna(method="bfill")
+
+    # ------------------------------
+
     task = detect_task_type(df, target)
     with open(TASK_FILE, "w") as f:
         f.write(task)
@@ -69,9 +88,28 @@ def train_automl_model(df: pd.DataFrame, target: str) -> dict:
         importance = _get_feature_importance(best_model, reg_get_config("X_train"))
 
     top_row = results_df.iloc[0].to_dict()
+
+    # ✅ ADD THIS
+    top_models = results_df.head(3).to_dict(orient="records")
+
     metrics = {
         k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) else str(v))
         for k, v in top_row.items()
+    }
+
+    return {
+        "task_type": task,
+        "best_model_name": type(best_model).__name__,
+        "metrics": metrics,
+        "feature_importance": importance,
+        "comparison_table": results_df.head(10).to_dict(orient="records"),
+
+        # ✅ NEW FEATURES
+        "top_models": top_models,
+        "data_info": {
+            "rows": len(df),
+            "columns": len(df.columns)
+        }
     }
 
     return {
@@ -138,3 +176,40 @@ def _read_task_type() -> str:
         with open(TASK_FILE) as f:
             return f.read().strip()
     return "classification"
+
+#suggest_target
+def suggest_target(df: pd.DataFrame) -> str:
+    # Prefer numeric columns
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    
+    if numeric_cols:
+        return numeric_cols[-1]  # last numeric column
+    
+    # fallback: last column
+    return df.columns[-1]
+
+#column_filter
+def clean_columns(df: pd.DataFrame, target: str) -> pd.DataFrame:
+    df = df.copy()
+
+    drop_cols = []
+
+    for col in df.columns:
+        if col == target:
+            continue
+
+        # Drop ID-like columns
+        if "id" in col.lower():
+            drop_cols.append(col)
+
+        # Drop high-cardinality text (like emails, names)
+        elif df[col].dtype == "object" and df[col].nunique() > 0.9 * len(df):
+            drop_cols.append(col)
+
+        # Drop columns with too many unique values (random data)
+        elif df[col].nunique() > 0.95 * len(df):
+            drop_cols.append(col)
+
+    df = df.drop(columns=drop_cols, errors="ignore")
+
+    return df

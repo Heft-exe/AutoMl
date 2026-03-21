@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Any
 
-from backend.model import load_data, preprocess_data, train_automl_model, make_prediction
+from backend.model import load_data, preprocess_data, train_automl_model, make_prediction, suggest_target
 
 app = FastAPI(title="AutoML API", version="1.0.0")
 
@@ -68,6 +68,7 @@ async def upload_file(file: UploadFile = File(...)):
         "dtypes": summary["dtypes"],
         "missing_values": summary["missing_values"],
         "preview": summary["preview"],
+        "recommended_target": suggest_target(df),
     }
 
 
