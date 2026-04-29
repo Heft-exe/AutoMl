@@ -213,3 +213,21 @@ def clean_columns(df: pd.DataFrame, target: str) -> pd.DataFrame:
     df = df.drop(columns=drop_cols, errors="ignore")
 
     return df
+
+#date_processing
+def handle_dates(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    for col in df.columns:
+        if df[col].dtype == "object":
+            try:
+                parsed = pd.to_datetime(df[col], errors="coerce")
+                # If most values converted → it's a date column
+                if parsed.notnull().sum() > 0.8 * len(df):
+                    df[col + "_year"] = parsed.dt.year
+                    df[col + "_month"] = parsed.dt.month
+                    df[col + "_day"] = parsed.dt.day
+                    # Drop original date column
+                    df = df.drop(columns=[col])
+            except:
+                pass
+    return df 

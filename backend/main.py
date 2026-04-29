@@ -46,12 +46,13 @@ def root():
 @app.post("/upload/", tags=["Data"])
 async def upload_file(file: UploadFile = File(...)):
     """Upload a CSV file. Returns preview, column names, shape, dtypes, missing counts."""
+#File validation
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported.")
-
+#Unique filename
     unique_name = f"{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOAD_DIR, unique_name)
-
+#Save file
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
